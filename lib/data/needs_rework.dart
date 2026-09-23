@@ -12,22 +12,6 @@ const _x = Difficulty.expert;
 /// rather than deleted so the wording can be reworked into a playable pair
 /// later. **Not registered in `word_pack_registry.dart` — never drawn in game.**
 const List<WordPair> pairsNeedingRework = [
-  WordPair('Тишина', 'Покой', _e, ['ничего не мешает', 'хочется выдохнуть', 'редко бывает'], 2), // was: abstract_concepts
-  WordPair('Правда', 'Честность', _e, ['как есть на самом деле', 'иногда неудобно', 'ценят в людях'], 2), // was: abstract_concepts
-  WordPair('Победа', 'Успех', _e, ['добился своего', 'радуются за тебя', 'после стараний'], 2), // was: abstract_concepts
-  WordPair('Сон', 'Отдых', _e, ['восстанавливаешься', 'глаза закрываются', 'не хватает'], 2), // was: abstract_concepts
-  WordPair('Память', 'Прошлое', _e, ['было раньше', 'вспоминаешь', 'стирается со временем'], 2), // was: abstract_concepts
-  WordPair('Любовь', 'Нежность', _e, ['тёплое чувство', 'к близкому человеку', 'без слов понятно'], 2), // was: abstract_concepts
-  WordPair('Свобода', 'Независимость', _m, ['сам решаешь', 'никто не указывает', 'за это платишь'], 2), // was: abstract_concepts
-  WordPair('Грусть', 'Тоска', _h, ['тяжело на душе', 'без причины', 'проходит не сразу'], 2), // was: abstract_concepts
-  WordPair('Волнение', 'Тревога', _h, ['перед событием', 'внутри всё сжимается', 'не находишь места'], 2), // was: abstract_concepts
-  WordPair('Начало', 'Первый шаг', _x, ['до этого не было', 'страшновато', 'дальше проще'], 1), // was: abstract_concepts
-  WordPair('Ошибка', 'Промах', _x, ['сделал не так', 'исправляешь', 'учишься на них'], 1), // was: abstract_concepts
-  WordPair('Мысль', 'Идея', _x, ['появилась в голове', 'записать бы', 'может изменить всё'], 1), // was: abstract_concepts
-  WordPair('Выбор', 'Решение', _x, ['надо определиться', 'обратно не отыграешь', 'мучаешься'], 2), // was: abstract_concepts
-  WordPair('Помощь', 'Поддержка', _x, ['рядом в трудный момент', 'не просишь, а дают', 'запоминается'], 2), // was: abstract_concepts
-  WordPair('Смысл', 'Причина', _x, ['зачем всё это', 'ищешь объяснение', 'спорят об этом'], 2), // was: abstract_concepts
-  WordPair('Мечта', 'Желание', _x, ['очень хочется', 'загадываешь', 'сбывается не всегда'], 2), // was: abstract_concepts
 
   // --- Spy-guessability pass ---------------------------------------------
   // Parked not for being hard but for leaving the spy without a direction:
