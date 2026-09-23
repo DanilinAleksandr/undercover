@@ -461,7 +461,7 @@ void main() {
   });
 
   group('the original base is untouched', () {
-    test('the 858 word pairs are still there and still declare nothing', () {
+    test('the words base only ever grew, and still declares nothing', () {
       const original = [
         'objects', 'people', 'animals', 'food', 'places', 'technology',
         'nature', 'movies', 'games', 'history', 'science', 'sports',
@@ -476,7 +476,12 @@ void main() {
           count++;
         }
       }
-      expect(count, 858);
+      // 858 at the time the modes were introduced, 1019 once the rework
+      // queue in `needs_rework.dart` was emptied back into the categories.
+      // The number may grow again; what must never change is the line above
+      // it — not one of these pairs declares a mode, so the words base is
+      // still the base the other two modes were added beside.
+      expect(count, 1019);
     });
 
     test('the new packs declare their mode all the way through', () {
