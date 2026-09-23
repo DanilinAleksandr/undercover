@@ -6,6 +6,7 @@ import 'word_hints/hints_expert_d.dart';
 import 'word_hints/hints_hard_a.dart';
 import 'word_hints/hints_hard_b.dart';
 import 'word_hints/hints_hard_c.dart';
+import 'word_hints/hints_hard_d.dart';
 
 /// Authored clues, keyed by the exact secret word.
 ///
@@ -42,6 +43,7 @@ const List<Map<String, WordHints>> hintParts = [
   hintsHardA,
   hintsHardB,
   hintsHardC,
+  hintsHardD,
 ];
 
 final Map<String, WordHints> wordHints = {
