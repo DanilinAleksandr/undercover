@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+     width="3456" height="1024" viewBox="0 0 3456 1024"
+     color-interpolation-filters="sRGB">
+
+  <title>Undercover — launcher icon</title>
+  <desc>
+    Source of truth for every launcher asset. Three artboards, all 1024x1024:
+
+      x    0..1024  #artboard-icon        the full icon (legacy tiles, store)
+      x 1216..2240  #artboard-foreground  adaptive foreground, transparent
+      x 2432..3456  #artboard-monochrome  Android 13 themed icon, white
+
+    The symbol is drawn once, in #mark on the first artboard. The other two
+    artboards are clones of it, so there is exactly one copy of the geometry:
+    edit #mark and all three follow. tool/generate_icon.ps1 exports each
+    artboard by area with Inkscape.
+
+    Palette: background #07080D, gold #D9A94C, plum #4A1A30, deep plum #221018,
+    mask #0D0910, teal #0A2224.
+  </desc>
+
+  <defs>
+    <!-- Each artboard is fenced to its own square. Without this the heavily
+         blurred vignette and atmosphere of the first board reach far past
+         x=1024 and bleed into the export area of the next one. -->
+    <clipPath id="clip-board-icon"><rect x="0" y="0" width="1024" height="1024"/></clipPath>
+    <clipPath id="clip-board-fg"><rect x="1216" y="0" width="1024" height="1024"/></clipPath>
+    <clipPath id="clip-board-mono"><rect x="2432" y="0" width="1024" height="1024"/></clipPath>
+
+    <!-- The eye interior. Everything that happens inside the lid — the iris,
+         the mask and its gold edge — is cut to this shape, so nothing can
+         cross the gold contour. -->
+    <clipPath id="clip-socket">
+      <path d="M233.984,512.000 C367.432,286.966 656.568,286.966 790.016,512.000
+               C656.568,690.012 367.432,690.012 233.984,512.000 Z"/>
+    </clipPath>
+
+    <!-- Every soft wash below fades with the square of its blur, not linearly.
+         That is deliberate: it is the falloff the icon was designed against,
+         and it keeps the glow tight instead of letting it bloom over the
+         silhouette. feGaussianBlur alone would spread it much further. -->
+    <filter id="f-glow" x="-40%" y="-60%" width="180%" height="220%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="30.72"/>
+      <feComponentTransfer><feFuncA type="gamma" exponent="2"/></feComponentTransfer>
+    </filter>
+    <filter id="f-plum" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="236.544"/>
+      <feComponentTransfer><feFuncA type="gamma" exponent="2"/></feComponentTransfer>
+    </filter>
+    <filter id="f-teal" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="180.224"/>
+      <feComponentTransfer><feFuncA type="gamma" exponent="2"/></feComponentTransfer>
+    </filter>
+    <filter id="f-vignette" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="61.44"/>
+    </filter>
+
+    <!-- Themed icons keep the shape and throw the palette away: flatten to
+         white, take the alpha from how much light a pixel carried, and
+         intersect it with the original alpha so the soft glow stays soft. -->
+    <filter id="f-silhouette" x="-40%" y="-60%" width="180%" height="220%" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" result="luma"
+                     values="0 0 0 0 1
+                             0 0 0 0 1
+                             0 0 0 0 1
+                             0.66 1.298 0.242 0 0"/>
+      <feComposite in="luma" in2="SourceGraphic" operator="in"/>
+    </filter>
+  </defs>
+
+  <!-- ==================================================================== -->
+  <!-- Artboard 1 — the icon itself. Export area 0:0:1024:1024.             -->
+  <!-- ==================================================================== -->
+  <g id="artboard-icon" inkscape:label="Icon" clip-path="url(#clip-board-icon)">
+    <rect x="0" y="0" width="1024" height="1024" fill="#07080D"/>
+
+    <!-- Atmosphere. Deliberately almost invisible: it gives the tile depth at
+         512 px and disappears at 48 px without taking the symbol with it.
+         It is not part of #mark, so it never scales with the symbol. -->
+    <ellipse cx="512" cy="460.8" rx="430.08" ry="430.08"
+             fill="#4A1A30" opacity="0.3529" filter="url(#f-plum)"/>
+    <ellipse cx="368.64" cy="645.12" rx="327.68" ry="327.68"
+             fill="#0A2224" opacity="0.2353" filter="url(#f-teal)"/>
+
+    <!-- The symbol, 10% larger than its own scale so the legacy tile is
+         properly filled. #mark keeps its own coordinates; the clones on the
+         other artboards are unaffected by this wrapper. -->
+    <g transform="translate(512,512) scale(1.1) translate(-512,-512)">
+      <g id="mark" inkscape:label="Mark">
+
+        <!-- The playing card behind the eye: a whisper, never a second
+             silhouette. -->
+        <rect id="card" x="278.528" y="176.128" width="466.944" height="671.744"
+              rx="46.08" ry="46.08"
+              fill="#0B0C13" stroke="#D9A94C" stroke-opacity="0.2"
+              stroke-width="4.096"/>
+
+        <!-- Gold breathing around the almond. -->
+        <path id="eye-glow" filter="url(#f-glow)" fill="#D9A94C" opacity="0.3333"
+              d="M195.584,512.000 C347.464,216.643 676.536,216.643 828.416,512.000
+                 C676.536,745.641 347.464,745.641 195.584,512.000 Z"/>
+
+        <!-- The contour is the gap between two nested almonds rather than a
+             stroke: it tapers towards the corners on its own, the way an inked
+             eye is drawn. -->
+        <path id="eye-contour" fill="#D9A94C"
+              d="M204.800,512.000 C352.256,230.707 671.744,230.707 819.200,512.000
+                 C671.744,734.515 352.256,734.515 204.800,512.000 Z"/>
+        <path id="eye-socket" fill="#221018"
+              d="M233.984,512.000 C367.432,286.966 656.568,286.966 790.016,512.000
+                 C656.568,690.012 367.432,690.012 233.984,512.000 Z"/>
+
+        <g id="iris" clip-path="url(#clip-socket)">
+          <circle cx="512" cy="549.786" r="121.754" fill="#4A1A30"/>
+          <circle cx="512" cy="549.786" r="53.572" fill="#040508"/>
+          <circle cx="512" cy="549.786" r="113.562"
+                  fill="none" stroke="#D9A94C" stroke-width="16.384"/>
+          <circle id="glint" cx="463.299" cy="523.000" r="24.351" fill="#F5D898"/>
+        </g>
+
+        <!-- The mask. Its lower edge stops above the pupil on purpose: a mask
+             that crosses the pupil reads as a drooping eyelid, not a disguise. -->
+        <g id="mask" clip-path="url(#clip-socket)">
+          <path id="mask-shade" fill="#0D0910"
+                d="M137.216,331.469 C370.688,465.818 653.312,465.818 886.784,331.469
+                   L942.080,-117.760 L81.920,-117.760 Z"/>
+          <path id="mask-edge" fill="#D9A94C"
+                d="M137.216,331.469 C370.688,465.818 653.312,465.818 886.784,331.469
+                   L886.784,358.758 C653.312,493.107 370.688,493.107 137.216,358.758 Z"/>
+        </g>
+
+      </g>
+    </g>
+
+    <!-- Vignette last, over everything. -->
+    <ellipse cx="512" cy="512" rx="558.08" ry="558.08"
+             fill="none" stroke="#000000" stroke-opacity="0.7843"
+             stroke-width="235.52" filter="url(#f-vignette)"/>
+  </g>
+
+  <!-- ==================================================================== -->
+  <!-- Artboard 2 — adaptive foreground. Export area 1216:0:2240:1024.      -->
+  <!-- No background and no atmosphere: the launcher paints the background   -->
+  <!-- colour itself. Scaled to 0.72 so the symbol stays inside the 66/108   -->
+  <!-- safe zone under a circle, a squircle or a rounded square.             -->
+  <!-- ==================================================================== -->
+  <g id="artboard-foreground" inkscape:label="Adaptive foreground" clip-path="url(#clip-board-fg)">
+    <use xlink:href="#mark" href="#mark"
+         transform="translate(1216,0) translate(512,512) scale(0.72) translate(-512,-512)"/>
+  </g>
+
+  <!-- ==================================================================== -->
+  <!-- Artboard 3 — Android 13 themed icon. Export area 2432:0:3456:1024.   -->
+  <!-- Same clone, flattened to a white silhouette by the filter.            -->
+  <!-- ==================================================================== -->
+  <g id="artboard-monochrome" inkscape:label="Monochrome" clip-path="url(#clip-board-mono)" filter="url(#f-silhouette)">
+    <use xlink:href="#mark" href="#mark"
+         transform="translate(2432,0) translate(512,512) scale(0.72) translate(-512,-512)"/>
+  </g>
+
+</svg>
