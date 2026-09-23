@@ -3,6 +3,7 @@ import 'word_hints/hints_expert_a.dart';
 import 'word_hints/hints_expert_b.dart';
 import 'word_hints/hints_expert_c.dart';
 import 'word_hints/hints_expert_d.dart';
+import 'word_hints/hints_expert_e.dart';
 import 'word_hints/hints_hard_a.dart';
 import 'word_hints/hints_hard_b.dart';
 import 'word_hints/hints_hard_c.dart';
@@ -40,6 +41,7 @@ const List<Map<String, WordHints>> hintParts = [
   hintsExpertB,
   hintsExpertC,
   hintsExpertD,
+  hintsExpertE,
   hintsHardA,
   hintsHardB,
   hintsHardC,
