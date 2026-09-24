@@ -1,6 +1,8 @@
 import '../models/theme_pair.dart';
 import '../models/word_category.dart';
+import 'theme_packs/theme_books.dart';
 import 'theme_packs/theme_games.dart';
+import 'theme_packs/theme_screen.dart';
 import 'word_pack_registry.dart';
 
 /// The bundled «Самозванец» base: topic pairs, not word pairs.
@@ -15,6 +17,8 @@ import 'word_pack_registry.dart';
 /// `const ThemeCategory` and list it here.
 const List<ThemeCategory> allThemeCategories = [
   themeGamesCategory,
+  themeScreenCategory,
+  themeBooksCategory,
 ];
 
 /// Everything a round can be dealt from, in every mode.
