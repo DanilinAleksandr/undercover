@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../data/word_descriptions.dart';
 import '../../logic/hint_policy.dart';
 import '../../providers/game_session_provider.dart';
 import '../../router/route_paths.dart';
@@ -236,6 +237,7 @@ class _CardFace extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
+    final description = wordDescriptions[word];
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -287,6 +289,27 @@ class _CardFace extends StatelessWidget {
               ),
             ),
           ),
+          // What the word means, for the player who drew it. A round dies on
+          // the spot when somebody reads «Завхоз» and has nothing to
+          // associate from, so this is not a hint and follows none of their
+          // rules: it ignores the tier and the «Подсказки» switch, and it is
+          // printed for every word that has one — including the obvious ones,
+          // because a line that appeared only on rare words would announce
+          // that the word is rare.
+          if (description != null) ...[
+            const SizedBox(height: Gap.md),
+            Text(
+              description,
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: palette.onAccentMuted.withValues(alpha: 0.62),
+                fontSize: 13,
+                height: 1.3,
+              ),
+            ),
+          ],
           const Spacer(),
           Text(
             // The hidden-role line has to fit both sides equally: «Не выдай
