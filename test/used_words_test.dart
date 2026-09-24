@@ -526,7 +526,8 @@ void main() {
 
       // One row per mode; only the words row has anything in it.
       expect(find.text('Использовано: 2 слова'), findsOneWidget);
-      expect(find.text('Пока ничего не сыграно'), findsNWidgets(2));
+      expect(find.text('Пока ничего не сыграно'),
+          findsNWidgets(GameMode.values.length - 1));
 
       // Every mode row carries a «Сбросить», and so does the dialog, so the
       // taps have to say which one they mean.
@@ -546,7 +547,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(container.read(usedEntriesProvider)[GameMode.words]!, isEmpty);
       expect(find.text('История сброшена'), findsOneWidget);
-      expect(find.text('Пока ничего не сыграно'), findsNWidgets(3));
+      expect(find.text('Пока ничего не сыграно'),
+          findsNWidgets(GameMode.values.length));
     });
 
     testWidgets('the history link opens the settings from the filters',

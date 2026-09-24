@@ -9,6 +9,7 @@ import 'package:undercover/models/game_config.dart';
 import 'package:undercover/models/game_result.dart';
 import 'package:undercover/models/vote.dart';
 import 'package:undercover/models/game_mode.dart';
+import 'package:undercover/models/theme_pair.dart';
 import 'package:undercover/models/word_category.dart';
 import 'package:undercover/models/word_pair.dart';
 import 'package:undercover/providers/game_session_provider.dart';
@@ -38,6 +39,8 @@ final _pack = [
   _cat('l', GameMode.places,
       const WordPair('Маяк', 'Радиовышка', _e, ['башня', 'сигнал'], 5,
           mode: GameMode.places)),
+  _cat('t', GameMode.impostor,
+      const ThemePair('Футбол', 'Хоккей', _e, 5).toWordPair()),
 ];
 
 ProviderContainer _container() {
@@ -212,7 +215,9 @@ void main() {
 
         final session = container.read(gameSessionProvider)!;
         final isSpy = session.players.first.id == session.spyPlayerId;
-        expect(find.text(isSpy ? 'ШПИОН' : 'МИРНЫЙ'), findsOneWidget);
+        // «Самозванец» calls the odd player by its own name.
+        final spyLabel = mode == GameMode.impostor ? 'САМОЗВАНЕЦ' : 'ШПИОН';
+        expect(find.text(isSpy ? spyLabel : 'МИРНЫЙ'), findsOneWidget);
         expect(find.text(isSpy ? 'Не выдай себя' : 'Найди шпиона'),
             findsOneWidget);
         await gesture.up();
@@ -225,6 +230,7 @@ void main() {
         final gesture = await revealFirst(tester);
 
         expect(find.text('ШПИОН'), findsNothing);
+        expect(find.text('САМОЗВАНЕЦ'), findsNothing);
         expect(find.text('МИРНЫЙ'), findsNothing);
         expect(find.text('Не выдай себя'), findsNothing);
         expect(find.text('Найди шпиона'), findsNothing);

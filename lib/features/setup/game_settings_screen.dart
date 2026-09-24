@@ -101,8 +101,40 @@ class GameSettingsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: Gap.xxl),
               const SizedBox(height: Gap.xxl),
+              // Only «Самозванец» has a second theme to hand out, so only
+              // there is it a question what the odd player is shown.
+              if (mode == GameMode.impostor) ...[
+                _SectionTitle(
+                  title: 'Что видит самозванец',
+                  hint: config.impostorSeesDecoy
+                      ? 'Похожую тему — может и не знать, что он чужой'
+                      : 'Ничего — знает свою роль и угадывает тему по ответам',
+                ),
+                const SizedBox(height: Gap.md),
+                Wrap(
+                  spacing: Gap.sm,
+                  runSpacing: Gap.sm,
+                  children: [
+                    _Chip(
+                      label: 'Похожую тему',
+                      icon: Icons.visibility_outlined,
+                      selected: config.impostorSeesDecoy,
+                      color: AppColors.gold,
+                      onTap: () => notifier.setImpostorSeesDecoy(true),
+                    ),
+                    _Chip(
+                      label: 'Ничего',
+                      icon: Icons.visibility_off_outlined,
+                      selected: !config.impostorSeesDecoy,
+                      color: AppColors.gold,
+                      onTap: () => notifier.setImpostorSeesDecoy(false),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: Gap.xxl),
+              ],
               // Words and phrases only exist inside the words mode; the other
-              // two have no such distinction, so the row is simply absent.
+              // modes have no such distinction, so the row is simply absent.
               if (mode == GameMode.words) ...[
                 _SectionTitle(
                   title: 'Тип контента',
@@ -238,6 +270,8 @@ class GameSettingsScreen extends ConsumerWidget {
         return Icons.person_outline_rounded;
       case GameMode.places:
         return Icons.place_outlined;
+      case GameMode.impostor:
+        return Icons.theater_comedy_outlined;
     }
   }
 

@@ -34,6 +34,7 @@ abstract class PartySettingsKeys {
   static const showRoles = 'party_show_roles';
   static const alco = 'party_alco';
   static const fastVoting = 'party_fast_voting';
+  static const impostorSeesDecoy = 'party_impostor_sees_decoy';
   static const difficulties = 'party_difficulties';
   static const contentTypes = 'party_content_types';
   static const categories = 'party_categories';
@@ -80,6 +81,8 @@ class GameSetupNotifier extends Notifier<GameConfig> {
         showRoles: prefs.getBool(PartySettingsKeys.showRoles),
         alcoModeEnabled: prefs.getBool(PartySettingsKeys.alco),
         fastVoting: prefs.getBool(PartySettingsKeys.fastVoting),
+        impostorSeesDecoy:
+            prefs.getBool(PartySettingsKeys.impostorSeesDecoy),
         selectedDifficulties: _readSet(
             prefs, PartySettingsKeys.difficulties, Difficulty.values),
         selectedContentTypes: _readSet(
@@ -114,6 +117,8 @@ class GameSetupNotifier extends Notifier<GameConfig> {
       await prefs.setBool(PartySettingsKeys.showRoles, config.showRoles);
       await prefs.setBool(PartySettingsKeys.alco, config.alcoModeEnabled);
       await prefs.setBool(PartySettingsKeys.fastVoting, config.fastVoting);
+      await prefs.setBool(
+          PartySettingsKeys.impostorSeesDecoy, config.impostorSeesDecoy);
       await prefs.setStringList(PartySettingsKeys.difficulties,
           [for (final d in config.selectedDifficulties) d.name]);
       await prefs.setStringList(PartySettingsKeys.contentTypes,
@@ -206,6 +211,13 @@ class GameSetupNotifier extends Notifier<GameConfig> {
   /// «Хардкор» nor cancels it.
   void setFastVoting(bool enabled) {
     _applySetting(state.copyWith(fastVoting: enabled));
+  }
+
+  /// Whether the impostor of a «Самозванец» round is dealt a decoy theme.
+  /// Shapes what the cards say, so it is set before the deal and a running
+  /// round keeps the value it was dealt with.
+  void setImpostorSeesDecoy(bool enabled) {
+    _applySetting(state.copyWith(impostorSeesDecoy: enabled));
   }
 
   /// Switches what the party is playing.

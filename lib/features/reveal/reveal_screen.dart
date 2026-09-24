@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/word_descriptions.dart';
 import '../../logic/hint_policy.dart';
+import '../../models/game_mode.dart';
 import '../../providers/game_session_provider.dart';
 import '../../router/route_paths.dart';
 import '../../theme/app_colors.dart';
@@ -78,6 +79,14 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
     final word = isSpy
         ? session.wordPair.spyWord
         : session.wordPair.civilianWord;
+    // «Самозванец» deals topics instead of words, and the table may have
+    // chosen to give the impostor nothing at all. The theme is still the
+    // majority's "word" and the decoy the impostor's — only the blind card
+    // is new.
+    final mode = session.wordPair.gameMode;
+    final blindImpostor = mode == GameMode.impostor &&
+        isSpy &&
+        !session.config.impostorSeesDecoy;
     // Which role got which word is decided before this screen exists and is
     // not touched here. All that `showRoles` changes is whether the card is
     // allowed to say so.
@@ -165,11 +174,14 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
                                   ),
                                 ),
                               ),
-                              back: _CardFace(
-                                gradient: accent,
-                                role: showRoles ? isSpy : null,
-                                word: word,
-                              ),
+                              back: blindImpostor
+                                  ? _BlindImpostorFace(gradient: accent)
+                                  : _CardFace(
+                                      gradient: accent,
+                                      role: showRoles ? isSpy : null,
+                                      word: word,
+                                      mode: mode,
+                                    ),
                             ),
                           ),
                         ),
@@ -228,16 +240,22 @@ class _CardFace extends StatelessWidget {
 
   final String word;
 
+  /// What was dealt. Descriptions were written for the words mode only, the
+  /// same way hints were, and the role is called differently in «Самозванец».
+  final GameMode mode;
+
   const _CardFace({
     required this.gradient,
     required this.role,
     required this.word,
+    required this.mode,
   });
 
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
-    final description = wordDescriptions[word];
+    final description =
+        mode == GameMode.words ? wordDescriptions[word] : null;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -264,7 +282,8 @@ class _CardFace extends StatelessWidget {
       padding: const EdgeInsets.all(Gap.xl),
       child: Column(
         children: [
-          if (role != null) _RoleSigil(isSpy: role!),
+          if (role != null)
+            _RoleSigil(isSpy: role!, impostor: mode == GameMode.impostor),
           const Spacer(),
           Flexible(
             flex: 8,
@@ -335,8 +354,9 @@ class _CardFace extends StatelessWidget {
 /// the word underneath it.
 class _RoleSigil extends StatelessWidget {
   final bool isSpy;
+  final bool impostor;
 
-  const _RoleSigil({required this.isSpy});
+  const _RoleSigil({required this.isSpy, this.impostor = false});
 
   @override
   Widget build(BuildContext context) {
@@ -358,8 +378,77 @@ class _RoleSigil extends StatelessWidget {
           ),
           const SizedBox(width: Gap.sm),
           Text(
-            isSpy ? 'ШПИОН' : 'МИРНЫЙ',
+            isSpy ? (impostor ? 'САМОЗВАНЕЦ' : 'ШПИОН') : 'МИРНЫЙ',
             style: AppText.eyebrow(context, color: palette.onAccentMuted),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The card of a «Самозванец» impostor who was dealt no theme at all.
+///
+/// It necessarily names the role — a card with nothing on it is itself the
+/// answer — so it does so plainly and tells the player what to do instead.
+/// The shape, the border and the colours are the ordinary card's: across the
+/// table only the text is different, and nobody else can see the text.
+class _BlindImpostorFace extends StatelessWidget {
+  final Gradient gradient;
+
+  const _BlindImpostorFace({required this.gradient});
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(gradient.colors.first, AppColors.ink900, 0.28)!,
+            Color.lerp(gradient.colors.last, AppColors.ink900, 0.42)!,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(Radii.xl),
+        border: Border.all(
+          color: AppColors.gold.withValues(alpha: 0.24),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: gradient.colors.first.withValues(alpha: 0.45),
+            blurRadius: 40,
+            offset: const Offset(0, 18),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(Gap.xl),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.hearing_rounded, color: AppColors.gold, size: 40),
+          const SizedBox(height: Gap.lg),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              'Ты — Самозванец',
+              textAlign: TextAlign.center,
+              style: AppText.gameWord(context, size: 30),
+            ),
+          ),
+          const SizedBox(height: Gap.md),
+          Text(
+            'Темы у тебя нет. Слушай остальных, угадай её и не выдай себя',
+            textAlign: TextAlign.center,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: palette.onAccentMuted.withValues(alpha: 0.8),
+              fontSize: 13,
+              height: 1.3,
+            ),
           ),
         ],
       ),

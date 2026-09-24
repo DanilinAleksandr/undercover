@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../models/alco_penalty.dart';
+import '../../models/game_mode.dart';
 import '../../models/game_result.dart';
 import '../../models/game_session.dart';
 import '../../providers/game_session_provider.dart';
@@ -279,7 +280,12 @@ class _VerdictCard extends StatelessWidget {
             color: AppColors.teal,
             label: 'Ответы',
             value: 'Мирные: «${session.wordPair.civilianWord}»',
-            note: 'Шпион: «${session.wordPair.spyWord}»',
+            // A blind impostor was never shown the decoy; printing it as
+            // "their answer" would describe a card nobody saw.
+            note: session.wordPair.gameMode == GameMode.impostor &&
+                    !session.config.impostorSeesDecoy
+                ? 'Самозванец темы не видел'
+                : 'Шпион: «${session.wordPair.spyWord}»',
           ),
         ],
       ),

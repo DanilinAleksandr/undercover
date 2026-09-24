@@ -15,6 +15,7 @@ const Map<GameMode, String> usedEntriesKeys = {
   GameMode.words: 'used_words',
   GameMode.people: 'used_people',
   GameMode.places: 'used_places',
+  GameMode.impostor: 'used_impostor',
 };
 
 /// Schema version of the stores, so a future change to the format can be
@@ -34,9 +35,9 @@ const String legacyUsedPairsKey = 'used_pair_keys';
 /// the moment a pair is dealt into a round — opening the filters or abandoning
 /// setup writes nothing.
 ///
-/// The three sets never see each other. Spending «Париж» in the places mode
-/// leaves the words mode untouched, and resetting one mode leaves the other
-/// two exactly as they were.
+/// The sets never see each other. Spending «Париж» in the places mode
+/// leaves the words mode untouched, and resetting one mode leaves the others
+/// exactly as they were.
 class UsedEntriesNotifier extends Notifier<Map<GameMode, Set<String>>> {
   late final Future<void> _loading;
   final Set<GameMode> _wasReset = {};

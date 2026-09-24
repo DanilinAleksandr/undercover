@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../models/game_mode.dart';
 import '../../providers/game_session_provider.dart';
 import '../../router/route_paths.dart';
 import '../../theme/app_colors.dart';
@@ -73,7 +74,10 @@ class _RoleIntroScreenState extends ConsumerState<RoleIntroScreen>
               ),
               const SizedBox(height: Gap.sm),
               Text(
-                'Один из вас станет шпионом',
+                ref.watch(gameSessionProvider)?.wordPair.gameMode ==
+                        GameMode.impostor
+                    ? 'Один из вас станет самозванцем'
+                    : 'Один из вас станет шпионом',
                 style: TextStyle(
                   color: context.palette.textMuted,
                   fontSize: 13.5,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:undercover/app.dart';
+import 'package:undercover/data/theme_pack_registry.dart';
 import 'package:undercover/data/word_pack_registry.dart';
 import 'package:undercover/logic/hint_policy.dart';
 import 'package:undercover/logic/word_pack_selector.dart';
@@ -77,6 +78,12 @@ const _fixture = [
     name: 'Места Б',
     icon: Icons.place,
     pairs: [WordPair('Рим', 'Афины', _h, ['древность'], 5, mode: _places)],
+  ),
+  WordCategory(
+    id: 't1',
+    name: 'Темы A',
+    icon: Icons.theater_comedy,
+    pairs: [WordPair('Футбол', 'Хоккей', _e, [], 5, mode: GameMode.impostor)],
   ),
 ];
 
@@ -159,15 +166,17 @@ void main() {
 
     test('the modes partition the base with nothing left over', () {
       var sum = 0;
+      // The whole base a round can be dealt from — the themes of
+      // «Самозванец» included, which live outside the word registry.
       for (final mode in GameMode.values) {
-        final count = pairsMatching(allWordCategories,
+        final count = pairsMatching(allGameCategories,
                 gameMode: mode, allowAdultContent: true)
             .length;
         expect(count, greaterThan(0), reason: mode.name);
         sum += count;
       }
       final everything = [
-        for (final c in allWordCategories) ...c.pairs,
+        for (final c in allGameCategories) ...c.pairs,
       ].length;
       expect(sum, everything);
     });

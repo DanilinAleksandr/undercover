@@ -45,6 +45,16 @@ class GameConfig {
   /// turns it off; on by default, so nothing changes for an existing party.
   final bool showRoles;
 
+  /// «Самозванец» only: whether the impostor is dealt the neighbouring theme
+  /// or nothing at all.
+  ///
+  /// With a decoy the impostor may not even know they are the odd one out and
+  /// bluffs from a real topic; without one they know exactly what they are
+  /// and have to pick the theme up from what the others say. Fixed when the
+  /// round is dealt — it decides what the cards say, so a running round never
+  /// follows a later change. On by default.
+  final bool impostorSeesDecoy;
+
   const GameConfig({
     required this.playerNames,
     this.alcoModeEnabled = false,
@@ -56,6 +66,7 @@ class GameConfig {
     this.hintsEnabled = true,
     this.fastVoting = false,
     this.showRoles = true,
+    this.impostorSeesDecoy = true,
   });
 
   GameConfig copyWith({
@@ -69,6 +80,7 @@ class GameConfig {
     bool? hintsEnabled,
     bool? fastVoting,
     bool? showRoles,
+    bool? impostorSeesDecoy,
   }) {
     return GameConfig(
       playerNames: playerNames ?? this.playerNames,
@@ -81,6 +93,7 @@ class GameConfig {
       hintsEnabled: hintsEnabled ?? this.hintsEnabled,
       fastVoting: fastVoting ?? this.fastVoting,
       showRoles: showRoles ?? this.showRoles,
+      impostorSeesDecoy: impostorSeesDecoy ?? this.impostorSeesDecoy,
     );
   }
 

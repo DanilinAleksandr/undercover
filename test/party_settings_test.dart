@@ -55,6 +55,10 @@ const _pack = [
     WordPair('Бункер', 'Подлодка', _m, ['люки', 'без окон'], 5,
         mode: GameMode.places),
   ]),
+  WordCategory(id: 't', name: 'Темы A', icon: Icons.theater_comedy, pairs: [
+    WordPair('Футбол', 'Хоккей', _e, [], 5, mode: GameMode.impostor),
+    WordPair('Марио', 'Соник', _m, [], 5, mode: GameMode.impostor),
+  ]),
 ];
 
 Future<ProviderContainer> _pumpHome(WidgetTester tester,
