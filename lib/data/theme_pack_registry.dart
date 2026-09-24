@@ -2,6 +2,8 @@ import '../models/theme_pair.dart';
 import '../models/word_category.dart';
 import 'theme_packs/theme_books.dart';
 import 'theme_packs/theme_games.dart';
+import 'theme_packs/theme_life.dart';
+import 'theme_packs/theme_music.dart';
 import 'theme_packs/theme_screen.dart';
 import 'word_pack_registry.dart';
 
@@ -19,6 +21,8 @@ const List<ThemeCategory> allThemeCategories = [
   themeGamesCategory,
   themeScreenCategory,
   themeBooksCategory,
+  themeMusicCategory,
+  themeLifeCategory,
 ];
 
 /// Everything a round can be dealt from, in every mode.
