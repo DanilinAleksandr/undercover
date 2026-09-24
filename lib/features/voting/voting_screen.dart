@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../models/game_session.dart';
 import '../../providers/game_session_provider.dart';
 import '../../router/route_paths.dart';
 import '../../theme/app_colors.dart';
@@ -32,6 +33,43 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
   /// the phone reaches the next one.
   int? _selectionOwner;
 
+  /// The table is choosing together instead of voting one by one.
+  bool _unanimous = false;
+
+  /// Warns, then hands the table's single choice to the session.
+  ///
+  /// The warning is not ceremony: this path skips every individual ballot and
+  /// goes straight to the result, so a mistap here ends the round for
+  /// everyone.
+  Future<void> _castUnanimous(GameSession session) async {
+    final target =
+        session.players.firstWhere((p) => p.id == _selected).name;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Выбрать единогласно?'),
+        content: Text(
+          'Тайное голосование не состоится — $target сразу станет выбором '
+          'всего стола. Отменить это будет нельзя.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Отмена'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Да, выбрать'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    ref.read(gameSessionProvider.notifier).castUnanimousVote(_selected!);
+    final next = ref.read(gameSessionProvider);
+    if (next != null && mounted) context.go(pathForPhase(next.phase));
+  }
+
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
@@ -43,6 +81,11 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
       _selected = null;
     }
     final position = session.currentVotingIndex + 1;
+    // Only before the first ballot. Once part of the table has voted in
+    // secret, "everyone agrees" is no longer a true statement about the room.
+    final canGoUnanimous =
+        session.currentVotingIndex == 0 && session.votes.isEmpty;
+    if (_unanimous && !canGoUnanimous) _unanimous = false;
 
     return Scaffold(
       body: GradientBackground(
@@ -61,16 +104,19 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                 Eyebrow(
                   // Without the hand-off screen this line carries the only
                   // "whose turn is it" information the table gets.
-                  session.config.fastVoting
-                      ? 'Голос $position из ${session.players.length}'
-                      : 'Тайное голосование',
+                  _unanimous
+                      ? 'Решение стола'
+                      : (session.config.fastVoting
+                            ? 'Голос $position из ${session.players.length}'
+                            : 'Тайное голосование'),
                   ruled: true,
                 ),
                 const SizedBox(height: Gap.lg),
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    '${voter.name}, кто шпион?',
+                    // Nobody's turn any more — the room answers as one.
+                    _unanimous ? 'Кто шпион?' : '${voter.name}, кто шпион?',
                     style: AppText.title(context, size: 25),
                     textAlign: TextAlign.center,
                   ),
@@ -79,10 +125,14 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                 AnimatedSwitcher(
                   duration: Motion.fast,
                   child: Text(
-                    _selected == null
-                        ? 'Выберите одного игрока'
-                        : 'Решение принято — подтвердите',
-                    key: ValueKey(_selected == null),
+                    _unanimous
+                        ? (_selected == null
+                              ? 'Выбирайте вслух, все вместе'
+                              : 'Выбор стола — подтвердите')
+                        : (_selected == null
+                              ? 'Выберите одного игрока'
+                              : 'Решение принято — подтвердите'),
+                    key: ValueKey('$_unanimous/${_selected == null}'),
                     style: AppText.caption(context),
                   ),
                 ),
@@ -102,7 +152,10 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                     itemCount: session.players.length,
                     itemBuilder: (context, index) {
                       final p = session.players[index];
-                      final isSelf = p.id == voter.id;
+                      // In a unanimous choice there is no voter to exclude:
+                      // the table picks together, and the player whose formal
+                      // turn it is can be the one they pick.
+                      final isSelf = !_unanimous && p.id == voter.id;
                       final isSelected = _selected == p.id;
                       return GestureDetector(
                         onTap: isSelf
@@ -204,26 +257,54 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                     },
                   ),
                 ),
-                AppButton(
-                  label: 'Подтвердить голос',
-                  icon: Icons.how_to_vote_rounded,
-                  gradient: AppColors.spyGradient,
-                  onPressed: _selected == null
-                      ? null
-                      : () {
-                          ref
-                              .read(gameSessionProvider.notifier)
-                              .castVote(_selected!);
-                          final next = ref.read(gameSessionProvider);
-                          setState(() {
-                            _selected = null;
-                            _selectionOwner = next?.currentVotingIndex;
-                          });
-                          if (next != null) {
-                            context.go(pathForPhase(next.phase));
-                          }
-                        },
-                ),
+                if (_unanimous) ...[
+                  AppButton(
+                    label: 'Выбрать единогласно',
+                    icon: Icons.groups_rounded,
+                    // Deliberately not the spy gradient of «Подтвердить
+                    // голос»: this button skips the whole vote and cannot be
+                    // taken back, so it must not look like the one next to it.
+                    gradient: AppColors.civilianGradient,
+                    onPressed:
+                        _selected == null ? null : () => _castUnanimous(session),
+                  ),
+                  TextButton(
+                    onPressed: () => setState(() {
+                      _unanimous = false;
+                      _selected = null;
+                    }),
+                    child: const Text('Вернуться к голосованию'),
+                  ),
+                ] else ...[
+                  AppButton(
+                    label: 'Подтвердить голос',
+                    icon: Icons.how_to_vote_rounded,
+                    gradient: AppColors.spyGradient,
+                    onPressed: _selected == null
+                        ? null
+                        : () {
+                            ref
+                                .read(gameSessionProvider.notifier)
+                                .castVote(_selected!);
+                            final next = ref.read(gameSessionProvider);
+                            setState(() {
+                              _selected = null;
+                              _selectionOwner = next?.currentVotingIndex;
+                            });
+                            if (next != null) {
+                              context.go(pathForPhase(next.phase));
+                            }
+                          },
+                  ),
+                  if (canGoUnanimous)
+                    TextButton(
+                      onPressed: () => setState(() {
+                        _unanimous = true;
+                        _selected = null;
+                      }),
+                      child: const Text('Все и так согласны'),
+                    ),
+                ],
                 const SizedBox(height: 12),
               ],
             ),

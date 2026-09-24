@@ -10,6 +10,12 @@ import '../models/vote.dart';
 import 'used_entries_provider.dart';
 import 'word_pack_provider.dart';
 
+/// Voter id of the single ballot a unanimous choice casts.
+///
+/// Deliberately not a player id: nobody voted individually, and a session read
+/// back later should say so rather than pretend one of the players did it.
+const String unanimousVoterId = 'unanimous';
+
 /// Central state machine for an in-progress game. `null` means no game is
 /// currently running (host is on the home/setup screens).
 class GameSessionNotifier extends Notifier<GameSession?> {
@@ -148,6 +154,29 @@ class GameSessionNotifier extends Notifier<GameSession?> {
         phase: GamePhase.voteResult,
       );
     }
+  }
+
+  /// The whole table pointing at one person at once, instead of passing the
+  /// phone round for individual ballots.
+  ///
+  /// Runs through the same [tallyVotes] as an ordinary vote on purpose. One
+  /// ballot is an unopposed majority — a tie is arithmetically impossible —
+  /// so the result, the alco penalty and the win condition come out of
+  /// exactly the same code a full round of voting goes through. Nothing about
+  /// the outcome is special-cased for this path.
+  ///
+  /// [Player.hasVoted] stays false for everyone, because it is true: nobody
+  /// cast a ballot of their own. [GameSession.currentVotingIndex] is left
+  /// where it was for the same reason — the queue was never walked.
+  void castUnanimousVote(String targetId) {
+    final session = state;
+    if (session == null) return;
+    final votes = [Vote(voterId: unanimousVoterId, targetId: targetId)];
+    state = session.copyWith(
+      votes: votes,
+      voteResult: tallyVotes(session.players, votes, session.spyPlayerId),
+      phase: GamePhase.voteResult,
+    );
   }
 
   void proceedFromVoteResult() {
