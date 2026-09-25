@@ -1,3 +1,5 @@
+import '../models/game_mode.dart';
+import 'word_descriptions/persons.dart';
 import 'word_descriptions/professions.dart';
 
 /// Plain definitions of the secret word, keyed by the exact word.
@@ -31,3 +33,17 @@ import 'word_descriptions/professions.dart';
 const Map<String, String> wordDescriptions = {
   ...professionDescriptions,
 };
+
+/// The line printed under [word] on a card dealt in [mode], if there is one.
+///
+/// Each mode keeps its own table, because the same text can mean different
+/// things in two modes and a description written for one must never land on
+/// the other. In «Слова» it is the job descriptions above; in «Личности» it
+/// is who the person is and when they were famous
+/// (`word_descriptions/persons.dart`). The places and impostor modes have
+/// none: a city or a theme needs no explaining to the player holding it.
+String? descriptionFor(String word, GameMode mode) => switch (mode) {
+      GameMode.words => wordDescriptions[word],
+      GameMode.people => personDescriptions[word],
+      GameMode.places || GameMode.impostor => null,
+    };

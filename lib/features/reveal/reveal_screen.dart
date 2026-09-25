@@ -240,8 +240,8 @@ class _CardFace extends StatelessWidget {
 
   final String word;
 
-  /// What was dealt. Descriptions were written for the words mode only, the
-  /// same way hints were, and the role is called differently in «Самозванец».
+  /// What was dealt. Each mode has its own descriptions (or none), and the
+  /// role is called differently in «Самозванец».
   final GameMode mode;
 
   const _CardFace({
@@ -254,8 +254,7 @@ class _CardFace extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
-    final description =
-        mode == GameMode.words ? wordDescriptions[word] : null;
+    final description = descriptionFor(word, mode);
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
