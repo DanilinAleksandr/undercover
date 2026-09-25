@@ -13,24 +13,41 @@ import '../../../widgets/surface_card.dart';
 /// is better when a player wrestles with the word first. Clues unlock one at a
 /// time so nobody burns the near-definition when the broad nudge would have
 /// been enough.
+///
+/// [levelNames] labels each level; the default is the words mode's three-step
+/// escalation. A sheet with a single line of its own — the «Личности» card's
+/// who-and-when line — passes its own name for it.
 Future<void> showHintSheet(
   BuildContext context, {
   required List<String> hints,
   required Gradient accent,
+  List<String> levelNames = defaultHintLevelNames,
 }) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (context) => _HintSheet(hints: hints, accent: accent),
+    builder: (context) =>
+        _HintSheet(hints: hints, accent: accent, levelNames: levelNames),
   );
 }
+
+const List<String> defaultHintLevelNames = [
+  'Намёк',
+  'Уточнение',
+  'Почти определение',
+];
 
 class _HintSheet extends StatefulWidget {
   final List<String> hints;
   final Gradient accent;
+  final List<String> levelNames;
 
-  const _HintSheet({required this.hints, required this.accent});
+  const _HintSheet({
+    required this.hints,
+    required this.accent,
+    required this.levelNames,
+  });
 
   @override
   State<_HintSheet> createState() => _HintSheetState();
@@ -38,8 +55,6 @@ class _HintSheet extends StatefulWidget {
 
 class _HintSheetState extends State<_HintSheet> {
   int _revealed = 1;
-
-  static const _levelNames = ['Намёк', 'Уточнение', 'Почти определение'];
 
   void _revealNext() {
     HapticFeedback.selectionClick();
@@ -104,7 +119,7 @@ class _HintSheetState extends State<_HintSheet> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _levelNames[i].toUpperCase(),
+                            widget.levelNames[i].toUpperCase(),
                             style: AppText.eyebrow(context),
                           ),
                           const SizedBox(height: 3),
@@ -149,8 +164,13 @@ class _HintSheetState extends State<_HintSheet> {
 /// The quiet entry point under the card.
 class HintLink extends StatelessWidget {
   final VoidCallback onTap;
+  final String label;
 
-  const HintLink({super.key, required this.onTap});
+  const HintLink({
+    super.key,
+    required this.onTap,
+    this.label = 'Слово незнакомо?',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -164,7 +184,7 @@ class HintLink extends StatelessWidget {
       icon: Icon(Icons.help_outline_rounded,
           size: 16, color: context.palette.textMuted),
       label: Text(
-        'Слово незнакомо?',
+        label,
         style: AppText.caption(context).copyWith(
           decoration: TextDecoration.underline,
           decorationColor: context.palette.textMuted,

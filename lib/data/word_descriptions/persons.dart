@@ -1,5 +1,9 @@
 /// Who each person in the «Личности» mode is, for the player holding the card.
 ///
+/// Not printed on the card: it waits behind the «Кто это?» link under it, the
+/// same quiet entry the words mode uses for its hints, so the name is met on
+/// its own first.
+///
 /// One line, two parts separated by «; »: what the person is known for, and
 /// when the wide audience knew them. The second part is a period of fame, not
 /// a lifespan — «популярен с 2000-х», «XVI век», «1917–1924» — because the

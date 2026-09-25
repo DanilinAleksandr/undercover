@@ -12,7 +12,7 @@ import 'package:undercover/providers/game_session_provider.dart';
 import 'package:undercover/providers/game_setup_provider.dart';
 
 /// Every person in «Личности» carries a line saying who they are and when
-/// they were famous, printed under the name on the card.
+/// they were famous, opened from the «Кто это?» link under the card.
 ///
 /// Same reasoning as the job descriptions: if only the obscure names had a
 /// line, its presence would tell the table the name is obscure. And one rule
@@ -113,7 +113,7 @@ void main() {
     });
   });
 
-  testWidgets('on the card: the line is printed under the name', (tester) async {
+  Future<ProviderContainer> pumpToCard(WidgetTester tester, GameMode mode) async {
     SharedPreferences.setMockInitialValues({});
     tester.view.physicalSize = const Size(1170, 2532);
     tester.view.devicePixelRatio = 3.0;
@@ -123,9 +123,9 @@ void main() {
     final container = ProviderContainer();
     addTearDown(container.dispose);
     final setup = container.read(gameSetupProvider.notifier);
-    // Like the job lines, these are not hints and ignore the switch.
+    // Not a hint: the «Подсказки» switch must not take it away.
     setup.setHintsEnabled(false);
-    setup.setGameMode(GameMode.people);
+    setup.setGameMode(mode);
 
     await tester.pumpWidget(UncontrolledProviderScope(
         container: container, child: const UndercoverApp()));
@@ -154,26 +154,49 @@ void main() {
     await tester.pump(const Duration(milliseconds: 2200));
     await tester.pumpAndSettle();
     await tap('Это я, показать карту');
+    return container;
+  }
 
+  testWidgets('on the card: the line waits behind «Кто это?»', (tester) async {
+    final container = await pumpToCard(tester, GameMode.people);
     final session = container.read(gameSessionProvider)!;
     expect(session.wordPair.gameMode, GameMode.people);
     final player = session.players[session.currentRevealIndex];
     final name = player.id == session.spyPlayerId
         ? session.wordPair.spyWord
         : session.wordPair.civilianWord;
+    final line = personDescriptions[name]!;
+
+    // Before the card is read there is nothing to open.
+    expect(find.text('Кто это?'), findsNothing);
 
     final gesture = await tester.startGesture(
         tester.getCenter(find.byKey(const ValueKey('reveal-card'))));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 1200));
     await tester.pump(const Duration(milliseconds: 600));
-
     expect(find.text(name), findsOneWidget);
-    expect(find.text(personDescriptions[name]!), findsOneWidget,
-        reason: 'no line printed under "$name"');
-    expect(tester.takeException(), isNull);
-
+    // The name is met on its own: the line is not on the card.
+    expect(find.text(line), findsNothing);
     await gesture.up();
     await tester.pumpAndSettle();
+
+    expect(find.text('Кто это?'), findsOneWidget);
+    await tester.tap(find.text('Кто это?'));
+    await tester.pumpAndSettle();
+    expect(find.text(line), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('«Места» have no line and no link', (tester) async {
+    await pumpToCard(tester, GameMode.places);
+    final gesture = await tester.startGesture(
+        tester.getCenter(find.byKey(const ValueKey('reveal-card'))));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1200));
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(find.text('Кто это?'), findsNothing);
+    expect(find.text('Слово незнакомо?'), findsNothing);
   });
 }

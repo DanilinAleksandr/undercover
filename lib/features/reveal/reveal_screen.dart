@@ -103,6 +103,13 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
         ? hintsFor(word, session.wordPair.difficulty,
             mode: session.wordPair.gameMode)
         : const <String>[];
+    // Who the person on a «Личности» card is. It sits behind the same quiet
+    // link as a hint, not on the card: the table asked for the name to be
+    // met on its own first. Unlike a hint it is offered in every tier and
+    // whatever the «Подсказки» switch says — that switch does not exist in
+    // this mode, and a player who does not recognise the name cannot play.
+    final personLine =
+        mode == GameMode.people ? descriptionFor(word, mode) : null;
 
     return Scaffold(
       body: GradientBackground(
@@ -181,6 +188,12 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
                                       role: showRoles ? isSpy : null,
                                       word: word,
                                       mode: mode,
+                                      // Only the words mode prints its line
+                                      // on the card; people keep theirs
+                                      // behind the link below.
+                                      description: mode == GameMode.people
+                                          ? null
+                                          : descriptionFor(word, mode),
                                     ),
                             ),
                           ),
@@ -196,6 +209,16 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
                   HintLink(
                     onTap: () =>
                         showHintSheet(context, hints: hints, accent: accent),
+                  ),
+                if (_hasSeenEnough && personLine != null)
+                  HintLink(
+                    label: 'Кто это?',
+                    onTap: () => showHintSheet(
+                      context,
+                      hints: [personLine],
+                      accent: accent,
+                      levelNames: const ['Кто это'],
+                    ),
                   ),
                 AppButton(
                   label: 'Я запомнил слово',
@@ -240,21 +263,24 @@ class _CardFace extends StatelessWidget {
 
   final String word;
 
-  /// What was dealt. Each mode has its own descriptions (or none), and the
-  /// role is called differently in «Самозванец».
+  /// What was dealt: the role is called differently in «Самозванец».
   final GameMode mode;
+
+  /// The line printed under the word, or null for none.
+  final String? description;
 
   const _CardFace({
     required this.gradient,
     required this.role,
     required this.word,
     required this.mode,
+    this.description,
   });
 
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
-    final description = descriptionFor(word, mode);
+    final description = this.description;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
