@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:undercover/app.dart';
 import 'package:undercover/providers/game_session_provider.dart';
 import 'package:undercover/providers/game_setup_provider.dart';
+import 'package:undercover/data/word_descriptions.dart';
 import 'package:undercover/data/word_hints.dart';
 import 'package:undercover/data/word_pack_registry.dart';
 import 'package:undercover/logic/hint_policy.dart';
@@ -386,6 +387,12 @@ void main() {
       expect(find.text(expected.medium!), findsOneWidget);
       await tap('Ещё подсказка');
       expect(find.text(expected.strong!), findsOneWidget);
+      // A job's plain definition, if it has one, is the very last level.
+      final definition = wordDescriptions[word];
+      if (definition != null) {
+        await tap('Ещё подсказка');
+        expect(find.text(definition), findsOneWidget);
+      }
       expect(find.text('Ещё подсказка'), findsNothing);
 
       // And the clue never spells out the secret.
@@ -448,9 +455,23 @@ void main() {
       await gesture.up();
       await tester.pumpAndSettle();
 
-      expect(container.read(gameSessionProvider)!.wordPair.difficulty,
-          Difficulty.easy);
-      expect(find.text('Слово незнакомо?'), findsNothing);
+      final session = container.read(gameSessionProvider)!;
+      expect(session.wordPair.difficulty, Difficulty.easy);
+      final player = session.players[session.currentRevealIndex];
+      final word = player.id == session.spyPlayerId
+          ? session.wordPair.spyWord
+          : session.wordPair.civilianWord;
+      // A job still carries its plain definition behind the link in every
+      // tier — that is a description, not a hint. What an easy round must
+      // never do is escalate into the authored clues.
+      if (wordDescriptions[word] == null) {
+        expect(find.text('Слово незнакомо?'), findsNothing, reason: word);
+        return;
+      }
+      await tap('Слово незнакомо?');
+      expect(find.text('ОПРЕДЕЛЕНИЕ'), findsOneWidget, reason: word);
+      expect(find.text('НАМЁК'), findsNothing, reason: word);
+      expect(find.text('Ещё подсказка'), findsNothing, reason: word);
     });
   });
 }
