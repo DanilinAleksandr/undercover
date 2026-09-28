@@ -103,13 +103,21 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
         ? hintsFor(word, session.wordPair.difficulty,
             mode: session.wordPair.gameMode)
         : const <String>[];
-    // Who the person on a «Личности» card is. It sits behind the same quiet
-    // link as a hint, not on the card: the table asked for the name to be
-    // met on its own first. Unlike a hint it is offered in every tier and
-    // whatever the «Подсказки» switch says — that switch does not exist in
-    // this mode, and a player who does not recognise the name cannot play.
-    final personLine =
-        mode == GameMode.people ? descriptionFor(word, mode) : null;
+    // What the word or person is — a job in «Слова», who and when in
+    // «Личности». Never printed on the card: a player who recognised the word
+    // does not need it, so it waits behind the same quiet link as the hints.
+    // Unlike a hint it is offered in every tier and whatever the «Подсказки»
+    // switch says, because a player who does not know the word cannot play.
+    final definition = descriptionFor(word, mode);
+    // One link, one sheet. The hints escalate first and the definition comes
+    // last: it is the most direct answer there is, and the sheet's whole
+    // point is that nobody burns the answer when a nudge would have done.
+    final help = [...hints, ?definition];
+    final helpLevels = [
+      ...defaultHintLevelNames.take(hints.length),
+      if (definition != null)
+        mode == GameMode.people ? 'Кто это' : 'Определение',
+    ];
 
     return Scaffold(
       body: GradientBackground(
@@ -188,12 +196,6 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
                                       role: showRoles ? isSpy : null,
                                       word: word,
                                       mode: mode,
-                                      // Only the words mode prints its line
-                                      // on the card; people keep theirs
-                                      // behind the link below.
-                                      description: mode == GameMode.people
-                                          ? null
-                                          : descriptionFor(word, mode),
                                     ),
                             ),
                           ),
@@ -205,19 +207,16 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
                 // Deliberately quiet and only after the card has been read:
                 // the round is better when a player wrestles with the word
                 // first, so help is offered, never pushed.
-                if (_hasSeenEnough && hints.isNotEmpty)
+                if (_hasSeenEnough && help.isNotEmpty)
                   HintLink(
-                    onTap: () =>
-                        showHintSheet(context, hints: hints, accent: accent),
-                  ),
-                if (_hasSeenEnough && personLine != null)
-                  HintLink(
-                    label: 'Кто это?',
+                    label: mode == GameMode.people
+                        ? 'Кто это?'
+                        : 'Слово незнакомо?',
                     onTap: () => showHintSheet(
                       context,
-                      hints: [personLine],
+                      hints: help,
                       accent: accent,
-                      levelNames: const ['Кто это'],
+                      levelNames: helpLevels,
                     ),
                   ),
                 AppButton(
@@ -266,21 +265,16 @@ class _CardFace extends StatelessWidget {
   /// What was dealt: the role is called differently in «Самозванец».
   final GameMode mode;
 
-  /// The line printed under the word, or null for none.
-  final String? description;
-
   const _CardFace({
     required this.gradient,
     required this.role,
     required this.word,
     required this.mode,
-    this.description,
   });
 
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
-    final description = this.description;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -333,27 +327,6 @@ class _CardFace extends StatelessWidget {
               ),
             ),
           ),
-          // What the word means, for the player who drew it. A round dies on
-          // the spot when somebody reads «Завхоз» and has nothing to
-          // associate from, so this is not a hint and follows none of their
-          // rules: it ignores the tier and the «Подсказки» switch, and it is
-          // printed for every word that has one — including the obvious ones,
-          // because a line that appeared only on rare words would announce
-          // that the word is rare.
-          if (description != null) ...[
-            const SizedBox(height: Gap.md),
-            Text(
-              description,
-              textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: palette.onAccentMuted.withValues(alpha: 0.62),
-                fontSize: 13,
-                height: 1.3,
-              ),
-            ),
-          ],
           const Spacer(),
           Text(
             // The hidden-role line has to fit both sides equally: «Не выдай

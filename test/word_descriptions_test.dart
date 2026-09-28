@@ -7,6 +7,11 @@ import 'package:undercover/data/word_packs/people.dart';
 import 'package:undercover/models/game_mode.dart';
 import 'package:undercover/providers/game_session_provider.dart';
 import 'package:undercover/providers/game_setup_provider.dart';
+import 'package:undercover/providers/word_pack_provider.dart';
+import 'package:undercover/models/difficulty.dart';
+import 'package:undercover/models/word_category.dart';
+import 'package:undercover/models/word_pair.dart';
+import 'package:undercover/data/word_hints.dart';
 
 /// A description explains a player's own word to the player holding it. The
 /// judgement — whether a given line actually helps — is editorial, so these
@@ -98,7 +103,7 @@ void main() {
   });
 
   group('on the card', () {
-    testWidgets('the meaning is printed under the word even with hints off',
+    testWidgets('the meaning waits behind the link, even with hints off',
         (tester) async {
       tester.view.physicalSize = const Size(1170, 2532);
       tester.view.devicePixelRatio = 3.0;
@@ -151,28 +156,104 @@ void main() {
       final word = player.id == session.spyPlayerId
           ? session.wordPair.spyWord
           : session.wordPair.civilianWord;
+      // Without this the checks below would pass vacuously on a word drawn
+      // from some other pack.
+      expect(packWords.contains(word) || _notJobs.contains(word), isTrue,
+          reason: '"$word" is not from the jobs pack — the filter did not hold');
+      final description = wordDescriptions[word];
 
-      // The card flips back the moment the finger lifts, so the assertion
-      // has to run while the gesture is still down.
+      expect(find.text('Слово незнакомо?'), findsNothing,
+          reason: 'offered before the card was read');
+
+      // The card flips back the moment the finger lifts, so the card itself
+      // has to be checked while the gesture is still down.
       final gesture = await tester.startGesture(
           tester.getCenter(find.byKey(const ValueKey('reveal-card'))));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 1200));
       await tester.pump(const Duration(milliseconds: 600));
-
       expect(find.text(word), findsOneWidget);
-      // Without this the check below would pass vacuously on a word drawn
-      // from some other pack.
-      expect(packWords.contains(word) || _notJobs.contains(word), isTrue,
-          reason: '"$word" is not from the jobs pack — the filter did not hold');
-      final description = wordDescriptions[word];
       if (description != null) {
-        expect(find.text(description), findsOneWidget,
-            reason: 'no meaning printed under "$word"');
+        // A player who recognised the word is not handed its meaning.
+        expect(find.text(description), findsNothing,
+            reason: 'the meaning of "$word" is printed on the card');
       }
-
       await gesture.up();
       await tester.pumpAndSettle();
+
+      if (description == null) return;
+      await tap('Слово незнакомо?');
+      expect(find.text(description), findsOneWidget,
+          reason: 'the sheet does not hold the meaning of "$word"');
+      expect(find.text('ОПРЕДЕЛЕНИЕ'), findsOneWidget);
+    });
+    testWidgets('with hints too: the hints escalate first, the meaning last',
+        (tester) async {
+      tester.view.physicalSize = const Size(1170, 2532);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      // Both sides are jobs with three authored hints and a description, so
+      // whoever holds the first card gets the full sheet.
+      const pair = WordPair('Завхоз', 'Прораб', Difficulty.expert,
+          ['стройка', 'инвентарь'], 5);
+      for (final w in [pair.civilianWord, pair.spyWord]) {
+        expect(wordHints[w]!.all, hasLength(3), reason: w);
+        expect(wordDescriptions[w], isNotNull, reason: w);
+      }
+      final container = ProviderContainer(overrides: [
+        wordPackProvider.overrideWithValue(const [
+          WordCategory(id: 'j', name: 'Jobs', icon: Icons.work, pairs: [pair]),
+        ]),
+      ]);
+      addTearDown(container.dispose);
+      container
+          .read(gameSetupProvider.notifier)
+          .setRoster(const ['Аня', 'Боря', 'Вика']);
+
+      await tester.pumpWidget(UncontrolledProviderScope(
+          container: container, child: const UndercoverApp()));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Новая игра'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Далее'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Начать игру'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 2200));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Это я, показать карту'));
+      await tester.pumpAndSettle();
+
+      final session = container.read(gameSessionProvider)!;
+      final player = session.players[session.currentRevealIndex];
+      final word = player.id == session.spyPlayerId
+          ? session.wordPair.spyWord
+          : session.wordPair.civilianWord;
+      final hints = wordHints[word]!.all;
+
+      final gesture = await tester.startGesture(
+          tester.getCenter(find.byKey(const ValueKey('reveal-card'))));
+      await tester.pump(const Duration(milliseconds: 1200));
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      // One link for both kinds of help, not two.
+      expect(find.text('Слово незнакомо?'), findsOneWidget);
+      await tester.tap(find.text('Слово незнакомо?'));
+      await tester.pumpAndSettle();
+      expect(find.text(hints.first), findsOneWidget);
+      expect(find.text(wordDescriptions[word]!), findsNothing,
+          reason: 'the meaning opened before the softest hint was spent');
+
+      for (var i = 0; i < hints.length; i++) {
+        await tester.tap(find.text('Ещё подсказка'));
+        await tester.pumpAndSettle();
+      }
+      expect(find.text(wordDescriptions[word]!), findsOneWidget);
+      expect(find.text('ОПРЕДЕЛЕНИЕ'), findsOneWidget);
+      expect(find.text('Это всё, что можно подсказать'), findsOneWidget);
     });
   });
 }
