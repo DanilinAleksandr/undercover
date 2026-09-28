@@ -492,7 +492,7 @@ void main() {
       // The number may grow again; what must never change is the line above
       // it — not one of these pairs declares a mode, so the words base is
       // still the base the other two modes were added beside.
-      expect(count, 1184);
+      expect(count, 1205);
     });
 
     test('the new packs declare their mode all the way through', () {
