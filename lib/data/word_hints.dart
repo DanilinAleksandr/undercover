@@ -4,10 +4,12 @@ import 'word_hints/hints_expert_b.dart';
 import 'word_hints/hints_expert_c.dart';
 import 'word_hints/hints_expert_d.dart';
 import 'word_hints/hints_expert_e.dart';
+import 'word_hints/hints_expert_f.dart';
 import 'word_hints/hints_hard_a.dart';
 import 'word_hints/hints_hard_b.dart';
 import 'word_hints/hints_hard_c.dart';
 import 'word_hints/hints_hard_d.dart';
+import 'word_hints/hints_hard_e.dart';
 
 /// Authored clues, keyed by the exact secret word.
 ///
@@ -42,10 +44,12 @@ const List<Map<String, WordHints>> hintParts = [
   hintsExpertC,
   hintsExpertD,
   hintsExpertE,
+  hintsExpertF,
   hintsHardA,
   hintsHardB,
   hintsHardC,
   hintsHardD,
+  hintsHardE,
 ];
 
 final Map<String, WordHints> wordHints = {
