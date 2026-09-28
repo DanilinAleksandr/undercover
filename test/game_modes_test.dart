@@ -487,11 +487,12 @@ void main() {
       }
       // 858 at the time the modes were introduced, 1019 once the rework
       // queue in `needs_rework.dart` was emptied back into the categories,
-      // 1028 after every category was topped up to 15 easy pairs.
+      // 1028 after every category was topped up to 15 easy pairs, 1153 once
+      // every category reached 20 easy and at least 24 medium ones.
       // The number may grow again; what must never change is the line above
       // it — not one of these pairs declares a mode, so the words base is
       // still the base the other two modes were added beside.
-      expect(count, 1116);
+      expect(count, 1153);
     });
 
     test('the new packs declare their mode all the way through', () {
