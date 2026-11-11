@@ -33,6 +33,7 @@ import 'word_packs/place_odd.dart';
 import 'word_packs/place_space.dart';
 import 'word_packs/place_transit.dart';
 import 'word_packs/places.dart';
+import 'word_packs/rare_words.dart';
 import 'word_packs/science.dart';
 import 'word_packs/sports.dart';
 import 'word_packs/technology.dart';
@@ -63,6 +64,7 @@ const List<WordCategory> allWordCategories = [
   sportsCategory,
   musicCategory,
   dailyLifeCategory,
+  rareWordsCategory,
   abstractCategory,
   phrasesCategory,
   adultCategory,
